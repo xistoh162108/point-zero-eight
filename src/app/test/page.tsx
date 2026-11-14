@@ -214,7 +214,7 @@ export default function TestPage() {
 
           {view.kind === "lowhz" && (
             <>
-              <p className="max-w-sm text-xl leading-relaxed">{en.test.lowPower}</p>
+              <p className="max-w-sm text-balance text-xl leading-relaxed">{en.test.lowPower}</p>
               <div className="flex w-full max-w-sm flex-col gap-3">
                 <Btn tone="primary" onClick={() => retry(false)}>
                   {en.test.retry}
@@ -226,7 +226,7 @@ export default function TestPage() {
 
           {view.kind === "mismatch" && (
             <>
-              <p className="max-w-sm text-xl leading-relaxed">{en.test.hzMismatch}</p>
+              <p className="max-w-sm text-balance text-xl leading-relaxed">{en.test.hzMismatch}</p>
               <Btn tone="primary" className="w-full max-w-sm" onClick={() => retry(false)}>
                 {en.test.retry}
               </Btn>
@@ -235,7 +235,7 @@ export default function TestPage() {
 
           {view.kind === "overtime" && (
             <>
-              <p className="max-w-sm text-xl leading-relaxed">{en.test.overtime}</p>
+              <p className="max-w-sm text-balance text-xl leading-relaxed">{en.test.overtime}</p>
               <div className="flex w-full max-w-sm flex-col gap-3">
                 <Btn tone="primary" onClick={() => chooseOvertime(true)}>
                   {en.test.keepGoing}
@@ -247,14 +247,14 @@ export default function TestPage() {
 
           {view.kind === "aborted" && (
             <>
-              <p className="max-w-sm text-xl leading-relaxed">{en.test.aborted[view.reason]}</p>
+              <p className="max-w-sm text-balance text-xl leading-relaxed">{en.test.aborted[view.reason]}</p>
               <Btn tone="primary" className="w-full max-w-sm" onClick={() => retry(true)}>
                 {en.test.startOver}
               </Btn>
             </>
           )}
 
-          {view.kind === "saveFailed" && <p className="max-w-sm text-xl leading-relaxed text-alert">{en.test.saveFailed}</p>}
+          {view.kind === "saveFailed" && <p className="max-w-sm text-balance text-xl leading-relaxed text-alert">{en.test.saveFailed}</p>}
         </div>
       )}
     </>

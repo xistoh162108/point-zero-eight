@@ -69,7 +69,7 @@ export default function DemoPage() {
 
             {view.kind === "aborted" && (
               <>
-                <p className="text-xl leading-relaxed">{en.test.aborted[view.reason]}</p>
+                <p className="text-balance text-xl leading-relaxed">{en.test.aborted[view.reason]}</p>
                 <Btn tone="primary" onClick={start}>
                   {en.demo.again}
                 </Btn>
@@ -78,7 +78,7 @@ export default function DemoPage() {
 
             {view.kind === "done" && (
               <>
-                <p className="text-2xl font-medium leading-snug">
+                <p className="text-balance text-2xl font-medium leading-snug">
                   {view.m.fastestMs === null || view.m.slowestMs === null
                     ? en.demo.resultTypicalOnly(view.m.typicalRtMs)
                     : en.demo.result(

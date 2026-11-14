@@ -70,7 +70,7 @@ export default function ResultPage() {
 
       <section className="flex flex-col gap-1">
         {s.prediction !== null && <p className="text-lg text-dim">{lines.expected}</p>}
-        <p className="text-3xl font-semibold leading-tight tracking-tight">{lines.measured}</p>
+        <p className="text-balance text-3xl font-semibold leading-tight tracking-tight">{lines.measured}</p>
       </section>
 
       <section className={`flex gap-3 rounded-lg border-2 bg-panel p-4 ${look.box}`}>

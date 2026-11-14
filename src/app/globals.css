@@ -23,6 +23,23 @@ body {
   font-family: var(--font-geist-sans), system-ui, sans-serif;
 }
 
+/* Line breaks: headings and short centered lines split evenly, body text avoids a lone last word. */
+@layer base {
+  h1,
+  h2,
+  legend {
+    text-wrap: balance;
+  }
+
+  p,
+  li,
+  label,
+  button,
+  a {
+    text-wrap: pretty;
+  }
+}
+
 /* The test surface. The engine only changes its text and data-state. */
 .pvt {
   position: fixed;
@@ -39,6 +56,7 @@ body {
   font-variant-numeric: tabular-nums;
   font-size: min(24vw, 11rem);
   line-height: 1;
+  white-space: nowrap; /* a number or "Too early" must never break onto two lines */
   touch-action: none;
   overscroll-behavior: none;
   user-select: none;
@@ -50,7 +68,7 @@ body {
 
 .pvt[data-state="feedback"] {
   color: #ffb000;
-  font-size: min(13vw, 6rem);
+  font-size: min(11vw, 5rem);
 }
 
 .pvt[data-state="message"] {
@@ -58,4 +76,6 @@ body {
   font-family: var(--font-geist-sans), system-ui, sans-serif;
   font-size: 1.25rem;
   line-height: 1.5;
+  white-space: normal;
+  text-wrap: balance;
 }

@@ -55,7 +55,7 @@ export default function SavedPage() {
         </>
       ) : (
         <>
-          <p className="text-2xl font-medium leading-snug">{state.text}</p>
+          <p className="text-balance text-2xl font-medium leading-snug">{state.text}</p>
           <div className="flex flex-col gap-3 rounded-lg border border-line bg-panel p-4">
             <p>{en.saved.sameBrowser}</p>
             <Btn onClick={copy}>{copied ? en.saved.copied : en.saved.copyLink}</Btn>

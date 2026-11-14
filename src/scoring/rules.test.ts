@@ -112,19 +112,19 @@ test('team: 180 s against 180 s with the 3.0 and 2.0 cut-offs', () => {
 test('lines', () => {
   expect(distanceLine(10)).toBe('Your typical reaction was about as fast as in the daytime.');
   expect(distanceLine(50)).toBe(
-    'Your typical reaction was 0.05 s later than in the daytime. At 65 mph, that is about 5 feet of road.',
+    'Your typical reaction was 0.05\u00a0s later than in the daytime. At 65\u00a0mph, that is about 5\u00a0feet of road.',
   );
-  expect(distanceLine(-30)).toBe('Your typical reaction was 0.03 s faster than in the daytime.');
+  expect(distanceLine(-30)).toBe('Your typical reaction was 0.03\u00a0s faster than in the daytime.');
   expect(awakeLine(16)).toBeNull();
   expect(awakeLine(17)).toContain('0.05%');
   expect(awakeLine(21)).toContain('0.08%');
   expect(awakeLine(24)).toContain('0.10%');
   expect(predictionLine(0, 'none', 11.2)).toEqual({
     expected: 'You expected: just as sharp.',
-    measured: 'Measured: 11% slower than daytime you.',
+    measured: 'Measured: 11% slower than daytime\u00a0you.',
   });
-  expect(predictionLine(1, 'none', 2.9).measured).toBe('Measured: about the same as daytime you.');
-  expect(predictionLine(2, 'none', -4.6).measured).toBe('Measured: 5% faster than daytime you.');
+  expect(predictionLine(1, 'none', 2.9).measured).toBe('Measured: about the same as daytime\u00a0you.');
+  expect(predictionLine(2, 'none', -4.6).measured).toBe('Measured: 5% faster than daytime\u00a0you.');
 });
 
 test('one missed stimulus barely moves the typical reaction time and the distance', () => {

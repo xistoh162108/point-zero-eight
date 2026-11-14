@@ -85,7 +85,7 @@ export default function StartPage() {
         <Mark />
         <h1 className="text-4xl font-semibold leading-tight tracking-tight">{en.start.title}</h1>
         {compare && ready.dayTypicalMs !== null && (
-          <p className="font-mono text-accent">{en.start.daytime(ready.dayTypicalMs)}</p>
+          <p className="text-balance text-accent">{en.start.daytime(ready.dayTypicalMs)}</p>
         )}
         <p className="text-dim">{en.start.subtitle(ready.team ? 180 : 90)}</p>
       </header>
