@@ -4,8 +4,10 @@
   --font-sans: var(--font-geist-sans);
   --font-mono: var(--font-geist-mono);
   --color-ink: #f3efe6;
-  --color-dim: #96928a;
+  --color-dim: #a39f96;
+  --color-mute: #8e8a82;
   --color-faint: #5d5a54;
+  --color-ref: #8fb8ff;
   --color-line: #2b2925;
   --color-panel: #121110;
   --color-accent: #ffb000;

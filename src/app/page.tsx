@@ -83,6 +83,9 @@ export default function StartPage() {
     <Page>
       <header className="flex flex-col gap-3">
         <Mark />
+        {ready.storage && (
+          <p className="text-sm font-medium text-accent">{compare ? en.start.stepCompare : en.start.stepBaseline}</p>
+        )}
         <h1 className="text-4xl font-semibold leading-tight tracking-tight">{en.start.title}</h1>
         {compare && ready.dayTypicalMs !== null && (
           <p className="text-balance text-accent">{en.start.daytime(ready.dayTypicalMs)}</p>

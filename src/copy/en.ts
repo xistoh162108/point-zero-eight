@@ -1,5 +1,6 @@
 // Every string the app shows lives in this file.
-// Rule: no wording that reads as permission. The one "fit to" is in `start.limit`.
+// Rule: no wording that reads as permission. "fit to", "fine to" and "all-clear" appear only inside
+// sentences that say what the test cannot tell you (`start.limit`, `result.cannotClear`, `result.verdict.none`).
 
 export const sec = (ms: number) => (ms / 1000).toFixed(2);
 const NB = '\u00a0'; // no-break space: a number never gets separated from its unit at a line end
@@ -10,6 +11,8 @@ export const PREDICTIONS = ['just as sharp', 'a bit slower', 'much slower'] as c
 
 export const en = {
   start: {
+    stepBaseline: 'Step 1 of 2: record daytime you now. Come back after midnight to compare.',
+    stepCompare: 'Step 2 of 2: compare with daytime you.',
     title: 'Are you as sharp as you think?',
     daytime: (typicalMs: number) => `Daytime you: typical reaction ${secs(typicalMs)}`,
     subtitle: (lengthS: number) => `A ${lengthS}-second reaction test. No install, no login.`,
@@ -102,33 +105,96 @@ export const en = {
     caffeine: 'Caffeine can hide slowing for a while.',
     alcohol: "You said you had alcohol today. Don't drive, whatever this screen says.",
     lateBaseline: 'Your daytime record was taken late, so the real change may be larger.',
-    seeRoom: 'See the room',
+    seeRoom: 'See how the room compares',
     none: 'No comparison on this phone yet.',
+    // Measured area
+    when: (time: string, awakeH: number) => `${time} · ${awakeH}${NB}h awake`,
+    measuredLabel: 'Measured · you vs daytime you',
+    headline: (speedDeltaPct: number) =>
+      Math.abs(speedDeltaPct) < 3
+        ? `You're about the same as daytime${NB}you.`
+        : speedDeltaPct > 0
+          ? `You're ${pct(speedDeltaPct)}% slower than daytime${NB}you.`
+          : `You're ${pct(speedDeltaPct)}% faster than daytime${NB}you.`,
+    cannotClear: "This test can't tell you it's fine to drive.",
+    ruler: {
+      expected: 'expected',
+      measured: (speedDeltaPct: number) =>
+        Math.abs(speedDeltaPct) < 0.5
+          ? 'measured 0%'
+          : `measured ${pct(speedDeltaPct)}% ${speedDeltaPct > 0 ? 'slower' : 'faster'}`,
+      offRight: ' →',
+      offLeft: '← ',
+      usualRange: 'your usual range',
+      ticks: ['10% faster', '0', '10%', '20%', '30% slower'],
+      aria: (rangePct: number, expectedPct: number, speedDeltaPct: number) =>
+        `Speed change scale from 10 percent faster to 30 percent slower than your daytime record. ` +
+        `Your usual range is about ${Math.round(rangePct)} percent either way. ` +
+        `You expected ${expectedPct} percent slower. ` +
+        `Measured: ${pct(speedDeltaPct)} percent ${speedDeltaPct < 0 ? 'faster' : 'slower'}.`,
+    },
+    typicalLabel: 'Typical reaction',
+    typicalDaytime: (ms: number) => `daytime ${secs(ms)}`,
+    seconds: (ms: number) => secs(ms),
+    roadLabel: `At 65${NB}mph`,
+    roadValue: (feet: number) => `+${Math.round(feet)}${NB}ft`,
+    roadSub: 'of road before you react',
+    roadSame: 'about the same',
+    roadSameSub: 'as in the daytime',
+    // Between the two areas
+    divider: 'a different kind of number',
+    // Reference area: tied to the hours entered only, never to the test
+    ref: {
+      label: 'Reference · not measured',
+      title: 'What studies saw in other people awake this long',
+      intro: "Based only on the hours you entered. Your test above doesn't change where you sit here.",
+      hours: (h: number) => `${h}${NB}h`,
+      ticks: ['0 h', '17', '21', '24', '28 h'],
+      rows: [
+        { from: '17 h+', text: 'performance like 0.05% blood alcohol' },
+        { from: '21 h+', text: 'like 0.08% in one driving-simulator study' },
+        { from: '24 h+', text: 'like 0.10% blood alcohol' },
+      ],
+      below17: `No study line below 17${NB}h.`,
+      tail: "Group averages from published studies. 0.08 doesn't measure blood alcohol and can't convert your result into one.",
+      aria: (h: number) =>
+        `Hours awake scale from 0 to 28. From 17 hours, studies found performance like 0.05 percent blood alcohol. ` +
+        `From 21 hours, one driving-simulator study found 0.08 percent. From 24 hours, 0.10 percent. You entered ${h} hours.`,
+    },
   },
   room: {
-    title: 'This room tonight. Exploratory and anonymous.',
-    bucketLabel: { '21-24': '9 PM to midnight', '00-03': 'Midnight to 3 AM', '03-06': '3 to 6 AM' } as Record<
+    title: 'HackPrinceton, tonight',
+    subtitle: "Each test compared with that person's own daytime record. Anonymous, exploratory.",
+    daytimeRecords: 'daytime records',
+    nightTests: 'night tests so far',
+    byTime: 'Slower than daytime, by time',
+    change: (mean: number) =>
+      Math.abs(mean) < 0.5 ? 'about the same' : `${pct(mean)}% ${mean < 0 ? 'faster' : 'slower'}`,
+    bucketDetail: (n: number, lo: number, hi: number) =>
+      `${n} tests · 95%${NB}CI${NB}${Math.round(lo)}${NB}to${NB}${Math.round(hi)}`,
+    collectingShort: 'collecting',
+    moreToShow: (missing: number) => `${missing} more ${missing === 1 ? 'test' : 'tests'} to show an average`,
+    dotsAria: (n: number) => `${n} of 5 tests needed before showing an average`,
+    said: (p: 0 | 1 | 2) => `Said "${PREDICTIONS[p]}"`,
+    measuredChange: (mean: number) =>
+      Math.abs(mean) < 0.5 ? 'measured about the same' : `measured ${pct(mean)}% ${mean < 0 ? 'faster' : 'slower'}`,
+    tests: (n: number) => `${n} tests`,
+    collectingSoFar: (n: number) => `collecting, ${n} so far`,
+    predictionNote: 'Line starts at 0% = same as daytime. Fewer than 5 tests: no average shown.',
+    myResult: 'My result',
+    bucketLabel: { '21-24': '9 PM – midnight', '00-03': 'Midnight – 3 AM', '03-06': '3 – 6 AM' } as Record<
       string,
       string
     >,
-    bucketLine: (label: string, n: number, mean: number, lo: number, hi: number) =>
-      `${label}: ${n} people, ${pct(mean)}% ${mean < 0 ? 'faster' : 'slower'} than their daytime selves on average (95%${NB}CI${NB}${Math.round(lo)}${NB}to${NB}${Math.round(hi)}).`,
-    collecting: (label: string, n: number) => `${label}: collecting, ${n} so far.`,
-    predictionTitle: 'What people expected, and what we measured',
-    predictionLine: (p: 0 | 1 | 2, n: number, mean: number) =>
-      Math.abs(mean) < 0.5
-        ? `Said "${PREDICTIONS[p]}": ${n} tests, measured about the same on average.`
-        : `Said "${PREDICTIONS[p]}": ${n} tests, measured ${pct(mean)}% ${mean < 0 ? 'faster' : 'slower'} on average.`,
-    predictionCollecting: (p: 0 | 1 | 2, n: number) => `Said "${PREDICTIONS[p]}": collecting, ${n} so far.`,
+    predictionTitle: 'What people expected vs what we measured',
     refresh: 'Refresh',
     loading: 'Loading',
     offline: 'The room data is not reachable right now. Your own result is still on this phone.',
     footnote:
-      'Speed change compared with each person’s own daytime record. An observation of this room, not proof of a cause.',
+      'An observation of people who tested on this site, not proof of a cause. No individual results or rankings are shown.',
     adminCounts: (baseline: number, compare: number, usable: number) =>
       `Daytime records: ${baseline}. Comparisons: ${compare}. In the room numbers: ${usable}.`,
     downloadCsv: 'Download CSV',
-    back: 'Back to start',
   },
   demo: {
     intro: 'Try it: 30 seconds. Tap as soon as the number starts counting.',
