@@ -1,69 +1,177 @@
-import Image from "next/image";
+"use client";
 
-export default function Home() {
+import Link from "next/link";
+import { useRouter } from "next/navigation";
+import { useEffect, useMemo, useState } from "react";
+import { en } from "@/copy/en";
+import type { Prediction } from "@/engine/types";
+import {
+  baselinesFor,
+  compareCooldownMin,
+  decideMode,
+  getDevice,
+  getSessions,
+  setPending,
+  storageOk,
+} from "@/storage/local";
+import { flush } from "@/storage/upload";
+import { Btn, Mark, Page, linkClass } from "./ui";
+import { useMounted } from "./useMounted";
+
+interface Ready {
+  storage: boolean;
+  team: boolean;
+  mode: "baseline" | "compare";
+  cooldownMin: number;
+  dayMeanMs: number | null;
+  hasResult: boolean;
+}
+
+function load(): Ready {
+  if (!storageOk()) {
+    return { storage: false, team: false, mode: "baseline", cooldownMin: 0, dayMeanMs: null, hasResult: false };
+  }
+  const device = getDevice();
+  const sessions = getSessions();
+  const now = new Date();
+  const lengthS = device.team ? 180 : 90;
+  // The screen timing class is only known after the test screen measures it,
+  // so ask the prediction if either class would be a comparison.
+  const cls = (["normal", "low"] as const).find((c) => decideMode(now, sessions, c) === "compare");
+  const bases = cls ? baselinesFor(sessions, cls, lengthS) : [];
+  const mode = cls && bases.length > 0 ? "compare" : "baseline";
+  return {
+    storage: true,
+    team: device.team,
+    mode,
+    cooldownMin: mode === "compare" ? compareCooldownMin(now, sessions) : 0,
+    dayMeanMs: bases.length ? bases.reduce((a, b) => a + b.metrics.meanRtMs, 0) / bases.length : null,
+    hasResult: sessions.some((s) => s.mode === "compare"),
+  };
+}
+
+const HOURS = Array.from({ length: 48 }, (_, i) => i + 1);
+const FLAGS = ["caffeine", "alcohol", "justWoke"] as const;
+
+export default function StartPage() {
+  const router = useRouter();
+  const mounted = useMounted();
+  const ready = useMemo(() => (mounted ? load() : null), [mounted]);
+  const [awakeH, setAwakeH] = useState<number | null>(null);
+  const [prediction, setPrediction] = useState<Prediction | null>(null);
+  const [flags, setFlags] = useState({ caffeine: false, alcohol: false, justWoke: false });
+
+  useEffect(() => {
+    if (ready?.storage) flush().catch((err) => console.warn("flush failed", err));
+  }, [ready]);
+
+  if (!ready) return <Page>{null}</Page>;
+
+  const compare = ready.mode === "compare";
+  const blocked = !ready.storage || ready.cooldownMin > 0;
+  const canStart = !blocked && awakeH !== null && (!compare || prediction !== null);
+
+  const start = () => {
+    if (!canStart || awakeH === null) return;
+    setPending({ awakeH, prediction: compare ? prediction : null, ...flags });
+    router.push("/test");
+  };
+
   return (
-    <div className="flex flex-col flex-1 items-center justify-center bg-zinc-50 font-sans dark:bg-black">
-      <main className="flex flex-1 w-full max-w-3xl flex-col items-center justify-between py-32 px-16 bg-white dark:bg-black sm:items-start">
-        <Image
-          className="dark:invert h-5 w-[100px]"
-          src="/next.svg"
-          alt="Next.js logo"
-          width={100}
-          height={20}
-          priority
-        />
-        <div className="flex flex-col items-center gap-6 text-center sm:items-start sm:text-left">
-          <h1 className="max-w-xs text-3xl font-semibold leading-10 tracking-tight text-black dark:text-zinc-50">
-            To get started, edit the{" "}
-            <code className="rounded bg-black/[.06] px-1.5 py-0.5 font-mono text-[0.9em] dark:bg-white/[.08]">
-              page.tsx
-            </code>{" "}
-            file.
-          </h1>
-          <p className="max-w-md text-lg leading-8 text-zinc-600 dark:text-zinc-400">
-            Looking for a starting point or more instructions? Head over to{" "}
-            <a
-              href="https://vercel.com/templates?framework=next.js&utm_source=create-next-app&utm_medium=appdir-template-tw&utm_campaign=create-next-app"
-              className="font-medium text-zinc-950 dark:text-zinc-50"
-            >
-              Templates
-            </a>{" "}
-            or the{" "}
-            <a
-              href="https://nextjs.org/learn?utm_source=create-next-app&utm_medium=appdir-template-tw&utm_campaign=create-next-app"
-              className="font-medium text-zinc-950 dark:text-zinc-50"
-            >
-              Learning
-            </a>{" "}
-            center.
-          </p>
+    <Page>
+      <header className="flex flex-col gap-3">
+        <Mark />
+        <h1 className="text-4xl font-semibold leading-tight tracking-tight">{en.start.title}</h1>
+        {compare && ready.dayMeanMs !== null && (
+          <p className="font-mono text-accent">{en.start.daytime(ready.dayMeanMs)}</p>
+        )}
+        <p className="text-dim">{en.start.subtitle(ready.team ? 180 : 90)}</p>
+      </header>
+
+      {!ready.storage && <p className="rounded-lg border border-alert p-4 text-alert">{en.start.storageBlocked}</p>}
+
+      {ready.cooldownMin > 0 && (
+        <div className="flex flex-col gap-3 rounded-lg border border-line bg-panel p-4">
+          <p>{en.start.cooldown(ready.cooldownMin)}</p>
+          <Link href="/result" className={linkClass}>
+            {en.start.lastResult}
+          </Link>
         </div>
-        <div className="flex flex-col gap-4 text-base font-medium sm:flex-row">
-          <a
-            className="flex h-12 w-full items-center justify-center gap-2 rounded-full bg-foreground px-5 text-background transition-colors hover:bg-[#383838] dark:hover:bg-[#ccc] md:w-[158px]"
-            href="https://vercel.com/new?utm_source=create-next-app&utm_medium=appdir-template-tw&utm_campaign=create-next-app"
-            target="_blank"
-            rel="noopener noreferrer"
-          >
-            <Image
-              className="dark:invert h-[14px] w-4"
-              src="/vercel.svg"
-              alt="Vercel logomark"
-              width={16}
-              height={14}
-            />
-            Deploy Now
-          </a>
-          <a
-            className="flex h-12 w-full items-center justify-center rounded-full border border-solid border-black/[.08] px-5 transition-colors hover:border-transparent hover:bg-black/[.04] dark:border-white/[.145] dark:hover:bg-[#1a1a1a] md:w-[158px]"
-            href="https://nextjs.org/docs?utm_source=create-next-app&utm_medium=appdir-template-tw&utm_campaign=create-next-app"
-            target="_blank"
-            rel="noopener noreferrer"
-          >
-            Documentation
-          </a>
-        </div>
-      </main>
-    </div>
+      )}
+
+      {!blocked && (
+        <>
+          <label className="flex flex-col gap-2">
+            <span className="font-medium">{en.start.awakeLabel}</span>
+            <select
+              className="min-h-12 rounded-lg border border-line bg-panel px-3 text-base text-ink"
+              value={awakeH ?? ""}
+              onChange={(e) => setAwakeH(e.target.value ? Number(e.target.value) : null)}
+            >
+              <option value="">{en.start.awakePlaceholder}</option>
+              {HOURS.map((h) => (
+                <option key={h} value={h}>
+                  {h}
+                </option>
+              ))}
+            </select>
+            <span className="text-sm text-dim">{en.start.awakeHint}</span>
+          </label>
+
+          {compare && (
+            <fieldset className="flex flex-col gap-2">
+              <legend className="mb-2 font-medium">{en.start.predictionLabel}</legend>
+              {en.start.predictionButtons.map((label, i) => (
+                <button
+                  key={label}
+                  type="button"
+                  aria-pressed={prediction === i}
+                  onClick={() => setPrediction(i as Prediction)}
+                  className={`min-h-12 rounded-lg border px-4 py-3 text-left text-base ${
+                    prediction === i ? "border-accent bg-accent text-black" : "border-line bg-panel text-ink"
+                  }`}
+                >
+                  {label}
+                </button>
+              ))}
+            </fieldset>
+          )}
+
+          <div className="flex flex-col gap-2">
+            {FLAGS.map((f) => (
+              <button
+                key={f}
+                type="button"
+                aria-pressed={flags[f]}
+                onClick={() => setFlags((v) => ({ ...v, [f]: !v[f] }))}
+                className={`flex min-h-12 items-center justify-between rounded-lg border px-4 py-3 text-left text-base ${
+                  flags[f] ? "border-accent text-ink" : "border-line text-dim"
+                }`}
+              >
+                <span>{en.start.flags[f]}</span>
+                <span
+                  aria-hidden
+                  className={`ml-3 h-5 w-5 shrink-0 rounded-full border ${
+                    flags[f] ? "border-accent bg-accent" : "border-faint"
+                  }`}
+                />
+              </button>
+            ))}
+          </div>
+
+          <div className="flex flex-col gap-3">
+            <p className="text-sm text-dim">{en.start.dnd}</p>
+            <Btn tone="primary" disabled={!canStart} onClick={start} className="text-lg">
+              {en.start.startButton}
+            </Btn>
+          </div>
+        </>
+      )}
+
+      <footer className="mt-auto flex flex-col gap-3 border-t border-line pt-5 text-sm leading-relaxed text-dim">
+        <p>{en.start.notice}</p>
+        <p className="text-ink">{en.start.limit}</p>
+      </footer>
+    </Page>
   );
 }

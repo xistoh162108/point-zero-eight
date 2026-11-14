@@ -1,0 +1,31 @@
+rules_version = '2';
+service cloud.firestore {
+  match /databases/{database}/documents {
+    match /events/{eventId}/sessions/{sessionId} {
+      allow read: if true;
+      allow create: if request.auth != null
+        && eventId == 'hp26f'
+        && request.resource.data.keys().hasOnly([
+             'v','kind','at','bucket','first','team','lengthS','overtime','awakeH',
+             'caffeine','alcohol','justWoke','hzClass','refreshHz','os','n',
+             'prediction','baselineClass','k','z','verdict',
+             'speedDeltaPct','lapseDeltaPts','meanRtDeltaMs'])
+        && request.resource.data.v == 1
+        && request.resource.data.kind in ['baseline', 'compare']
+        && request.resource.data.at == request.time
+        && request.resource.data.lengthS in [90, 180]
+        && request.resource.data.awakeH is number
+        && request.resource.data.awakeH >= 0 && request.resource.data.awakeH <= 72
+        && request.resource.data.n is int
+        && request.resource.data.n >= 5 && request.resource.data.n <= 120
+        && (request.resource.data.speedDeltaPct == null
+            || (request.resource.data.speedDeltaPct is number
+                && request.resource.data.speedDeltaPct > -100
+                && request.resource.data.speedDeltaPct < 100))
+        && (request.resource.data.z == null
+            || (request.resource.data.z is number
+                && request.resource.data.z > -20 && request.resource.data.z < 50));
+      allow update, delete: if false;
+    }
+  }
+}
