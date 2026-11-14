@@ -1,9 +1,7 @@
 // Checks the TypeScript scoring against the vectors produced by the reference implementation
-// (reference_scoring.py). The vectors live in fixtures/scoring-fixtures.json.
-// The file is read at run time so that the app still builds before the vectors are checked in.
-import { readFileSync } from 'node:fs';
-import { resolve } from 'node:path';
+// (fixtures/reference_scoring.py). Numbers must agree to six decimals, strings and booleans exactly.
 import { expect, test } from 'vitest';
+import fx from '../../fixtures/scoring-fixtures.json';
 import type { Trial } from '../engine/types';
 import { score, type Verdict } from './verdict';
 
@@ -29,9 +27,7 @@ interface Fixture {
   };
 }
 
-const fx = JSON.parse(readFileSync(resolve(__dirname, '../../fixtures/scoring-fixtures.json'), 'utf8')) as {
-  fixtures: Fixture[];
-};
+const fixtures = fx.fixtures as unknown as Fixture[];
 
 const close = (got: number | null, want: number | null | undefined) => {
   if (want === null || want === undefined) expect(got).toBeNull();
@@ -39,10 +35,10 @@ const close = (got: number | null, want: number | null | undefined) => {
 };
 
 test('there are twelve vectors', () => {
-  expect(fx.fixtures).toHaveLength(12);
+  expect(fixtures).toHaveLength(12);
 });
 
-for (const f of fx.fixtures) {
+for (const f of fixtures) {
   test(f.name, () => {
     const r = score(f.baselines, f.night, f.team, f.overtimeAccepted);
     const e = f.expected;
