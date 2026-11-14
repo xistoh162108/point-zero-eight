@@ -8,4 +8,4 @@ cd "$(dirname "$0")/.."
 npm test
 npm run build
 rsync -az out/ "$HOST:/var/www/pze/"
-curl -fsS -o /dev/null -w "https://129.212.216.42/ -> %{http_code}\n" https://129.212.216.42/
+curl -fsS -o /dev/null -w "https://point08.health/ -> %{http_code}\n" https://point08.health/
