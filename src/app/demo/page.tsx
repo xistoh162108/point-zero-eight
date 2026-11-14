@@ -79,12 +79,14 @@ export default function DemoPage() {
             {view.kind === "done" && (
               <>
                 <p className="text-2xl font-medium leading-snug">
-                  {en.demo.result(
-                    view.m.meanRtMs,
-                    view.m.fastestMs,
-                    view.m.slowestMs,
-                    ((view.m.slowestMs - view.m.fastestMs) / 1000) * FT_PER_S_AT_65MPH,
-                  )}
+                  {view.m.fastestMs === null || view.m.slowestMs === null
+                    ? en.demo.resultTypicalOnly(view.m.typicalRtMs)
+                    : en.demo.result(
+                        view.m.typicalRtMs,
+                        view.m.fastestMs,
+                        view.m.slowestMs,
+                        ((view.m.slowestMs - view.m.fastestMs) / 1000) * FT_PER_S_AT_65MPH,
+                      )}
                 </p>
                 <p className="text-dim">{en.demo.note}</p>
                 <p className="text-sm leading-relaxed text-dim">{en.start.limit}</p>

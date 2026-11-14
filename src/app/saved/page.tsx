@@ -3,10 +3,11 @@
 import Link from "next/link";
 import { useEffect, useMemo, useState } from "react";
 import { en } from "@/copy/en";
+import { metrics } from "@/scoring/metrics";
 import { getSessions, storageOk } from "@/storage/local";
 import { flush } from "@/storage/upload";
 import { Btn, Mark, Page, linkClass } from "../ui";
-import { useMounted } from "../useMounted";
+import { useIsClient } from "@/lib/client";
 
 function message(): string | null {
   if (!storageOk()) return null;
@@ -18,11 +19,12 @@ function message(): string | null {
   const usable = baselines.filter((s) => !s.justWoke && s.hzClass === last.hzClass);
   if (usable.length >= 2) return en.saved.second;
   if (last.baselineClass === "late") return en.saved.late;
-  return en.saved.first(last.metrics.meanRtMs, last.metrics.fastestMs);
+  const m = metrics(last.trials, last.lengthS * 1000);
+  return en.saved.first(m.typicalRtMs, m.fastestMs);
 }
 
 export default function SavedPage() {
-  const mounted = useMounted();
+  const mounted = useIsClient();
   const state = useMemo(() => (mounted ? { text: message() } : null), [mounted]);
   const [copied, setCopied] = useState(false);
 

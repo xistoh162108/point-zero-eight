@@ -9,7 +9,7 @@ export const PREDICTIONS = ['just as sharp', 'a bit slower', 'much slower'] as c
 export const en = {
   start: {
     title: 'Are you as sharp as you think?',
-    daytime: (meanMs: number) => `Daytime you: ${sec(meanMs)} s on average`,
+    daytime: (typicalMs: number) => `Daytime you: typical reaction ${sec(typicalMs)} s`,
     subtitle: (lengthS: number) => `A ${lengthS}-second reaction test. No install, no login.`,
     awakeLabel: 'How many hours have you been awake?',
     awakeHint: "Count from your last real sleep. Naps under an hour don't count.",
@@ -57,8 +57,8 @@ export const en = {
     saveFailed: 'Could not save this test on this phone. Free up storage and try again.',
   },
   saved: {
-    first: (meanMs: number, fastestMs: number) =>
-      `Daytime you is saved. Your average: ${sec(meanMs)} s. Fastest: ${sec(fastestMs)} s. Come back after midnight to see how you compare.`,
+    first: (typicalMs: number, fastestMs: number | null) =>
+      `Daytime you is saved. Typical reaction: ${sec(typicalMs)} s.${fastestMs === null ? '' : ` Fastest: ${sec(fastestMs)} s.`} Come back after midnight to see how you compare.`,
     second: "Second daytime record saved. Tonight's result will be steadier.",
     justWoke:
       "You said you just woke up, so we won't use this one as your daytime record. Try again in 30 minutes.",
@@ -83,11 +83,11 @@ export const en = {
       signs: "There are signs you're slower than daytime you. Get important things double-checked.",
       none: "This test didn't find evidence that you're slower. It can miss mild slowing, so this is not an all-clear.",
     },
-    distanceSame: 'On average you reacted about as fast as in the daytime.',
+    distanceSame: 'Your typical reaction was about as fast as in the daytime.',
     distanceSlower: (deltaMs: number, feet: number) =>
-      `On average you reacted ${sec(deltaMs)} s later than in the daytime. At 65 mph, that is about ${Math.round(feet)} feet of road.`,
+      `Your typical reaction was ${sec(deltaMs)} s later than in the daytime. At 65 mph, that is about ${Math.round(feet)} feet of road.`,
     distanceFaster: (deltaMs: number) =>
-      `On average you reacted ${sec(Math.abs(deltaMs))} s faster than in the daytime.`,
+      `Your typical reaction was ${sec(Math.abs(deltaMs))} s faster than in the daytime.`,
     awake17: (h: number) =>
       `You've been awake about ${h} hours. In studies, people awake 17 to 19 hours performed about as slowly as people at a blood alcohol level of 0.05%.`,
     awake21: (h: number) =>
@@ -132,8 +132,9 @@ export const en = {
     intro: 'Try it: 30 seconds. Tap as soon as the number starts counting.',
     start: 'Start',
     begin: 'The test takes 30 seconds. Tap to begin.',
-    result: (meanMs: number, fastestMs: number, slowestMs: number, feet: number) =>
-      `Your average: ${sec(meanMs)} s. Fastest ${sec(fastestMs)} s, slowest ${sec(slowestMs)} s. That ${sec(slowestMs - fastestMs)} s gap is about ${Math.round(feet)} feet of road at 65 mph.`,
+    result: (typicalMs: number, fastestMs: number, slowestMs: number, feet: number) =>
+      `Typical reaction: ${sec(typicalMs)} s. Fastest ${sec(fastestMs)} s, slowest ${sec(slowestMs)} s. That ${sec(slowestMs - fastestMs)} s gap is about ${Math.round(feet)} feet of road at 65 mph.`,
+    resultTypicalOnly: (typicalMs: number) => `Typical reaction: ${sec(typicalMs)} s.`,
     note: 'A real result compares you with your own daytime record.',
     again: 'Try again',
     seeRoom: 'See the room',

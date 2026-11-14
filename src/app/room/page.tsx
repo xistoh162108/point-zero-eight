@@ -7,7 +7,7 @@ import { MIN_N, bucketStats, predictionStats, toCsv, usable } from "@/lib/room";
 import { KEYS } from "@/storage/local";
 import type { Summary } from "@/storage/upload";
 import { Btn, Mark, Page, linkClass } from "../ui";
-import { useMounted } from "../useMounted";
+import { useIsClient } from "@/lib/client";
 
 const CACHE_MS = 2 * 60 * 1000; // raise to 5 minutes if Firestore reads pass half the daily quota
 const BAR_FULL_PCT = 25; // a bar is full width at a 25% change
@@ -35,7 +35,7 @@ function writeCache(rows: Summary[]) {
 }
 
 export default function RoomPage() {
-  const mounted = useMounted();
+  const mounted = useIsClient();
   const mode = useMemo<Mode | null>(() => {
     if (!mounted) return null;
     const q = new URLSearchParams(window.location.search);

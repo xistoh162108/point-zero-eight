@@ -50,7 +50,7 @@ function session(startedAt: Date, over: Partial<Session> = {}): Session {
     hzClass: 'normal',
     os: 'other',
     trials: [],
-    metrics: { n: 30, speed: 4, lapseShare: 0, meanRtMs: 250, fastestMs: 200, slowestMs: 320 },
+    metrics: { n: 30, speed: 4, lapseShare: 0, typicalRtMs: 250, fastestMs: 200, slowestMs: 320 },
     result: null,
     uploaded: false,
     ...over,

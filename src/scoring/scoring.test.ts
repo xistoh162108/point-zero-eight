@@ -1,24 +1,30 @@
 // Checks the TypeScript scoring against the vectors produced by the reference implementation
 // (reference_scoring.py). The vectors live in fixtures/scoring-fixtures.json.
+// The file is read at run time so that the app still builds before the vectors are checked in.
 import { readFileSync } from 'node:fs';
 import { resolve } from 'node:path';
 import { expect, test } from 'vitest';
 import type { Trial } from '../engine/types';
-import { score } from './verdict';
+import { score, type Verdict } from './verdict';
 
 interface Fixture {
   name: string;
-  baselines: Trial[][];
-  night: Trial[];
   team: boolean;
   overtimeAccepted: boolean;
+  baselines: Trial[][];
+  night: Trial[];
   expected: {
-    verdict: string;
-    overtimeOffered: boolean;
-    lapseRuleUsed: boolean;
+    k: number;
     z: number;
+    z90?: number | null;
+    z180?: number | null;
+    verdict: Verdict;
+    overtimeOffered: boolean;
+    finalLengthS: 90 | 180;
+    lapseRuleUsed: boolean;
     speedDeltaPct: number;
-    meanRtDeltaMs: number;
+    lapseDeltaPts: number;
+    rtDeltaMs: number;
     distanceFt: number;
   };
 }
@@ -27,19 +33,30 @@ const fx = JSON.parse(readFileSync(resolve(__dirname, '../../fixtures/scoring-fi
   fixtures: Fixture[];
 };
 
-test('there are nine vectors', () => {
-  expect(fx.fixtures).toHaveLength(9);
+const close = (got: number | null, want: number | null | undefined) => {
+  if (want === null || want === undefined) expect(got).toBeNull();
+  else expect(got).toBeCloseTo(want, 6);
+};
+
+test('there are twelve vectors', () => {
+  expect(fx.fixtures).toHaveLength(12);
 });
 
 for (const f of fx.fixtures) {
   test(f.name, () => {
     const r = score(f.baselines, f.night, f.team, f.overtimeAccepted);
-    expect(r.verdict).toBe(f.expected.verdict);
-    expect(r.overtimeOffered).toBe(f.expected.overtimeOffered);
-    expect(r.lapseRuleUsed).toBe(f.expected.lapseRuleUsed);
-    expect(r.z).toBeCloseTo(f.expected.z, 6);
-    expect(r.speedDeltaPct).toBeCloseTo(f.expected.speedDeltaPct, 6);
-    expect(r.meanRtDeltaMs).toBeCloseTo(f.expected.meanRtDeltaMs, 6);
-    expect(r.distanceFt).toBeCloseTo(f.expected.distanceFt, 6);
+    const e = f.expected;
+    expect(r.verdict).toBe(e.verdict);
+    expect(r.overtimeOffered).toBe(e.overtimeOffered);
+    expect(r.finalLengthS).toBe(e.finalLengthS);
+    expect(r.lapseRuleUsed).toBe(e.lapseRuleUsed);
+    expect(r.k).toBe(e.k);
+    close(r.z90, e.z90);
+    close(r.z180, e.z180);
+    close(r.z, e.z);
+    close(r.speedDeltaPct, e.speedDeltaPct);
+    close(r.lapseDeltaPts, e.lapseDeltaPts);
+    close(r.rtDeltaMs, e.rtDeltaMs);
+    close(r.distanceFt, e.distanceFt);
   });
 }

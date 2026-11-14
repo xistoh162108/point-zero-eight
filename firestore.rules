@@ -9,7 +9,7 @@ service cloud.firestore {
              'v','kind','at','bucket','first','team','lengthS','overtime','awakeH',
              'caffeine','alcohol','justWoke','hzClass','refreshHz','os','n',
              'prediction','baselineClass','k','z','verdict',
-             'speedDeltaPct','lapseDeltaPts','meanRtDeltaMs'])
+             'speedDeltaPct','lapseDeltaPts','rtDeltaMs'])
         && request.resource.data.v == 1
         && request.resource.data.kind in ['baseline', 'compare']
         && request.resource.data.at == request.time
@@ -18,6 +18,30 @@ service cloud.firestore {
         && request.resource.data.awakeH >= 0 && request.resource.data.awakeH <= 72
         && request.resource.data.n is int
         && request.resource.data.n >= 5 && request.resource.data.n <= 120
+        && request.resource.data.bucket in ['day', 'evening', '21-24', '00-03', '03-06', '06-09', 'other']
+        && request.resource.data.first is bool
+        && request.resource.data.team is bool
+        && request.resource.data.overtime in ['none', 'declined', 'taken']
+        && request.resource.data.caffeine is bool
+        && request.resource.data.alcohol is bool
+        && request.resource.data.justWoke is bool
+        && request.resource.data.hzClass in ['normal', 'low']
+        && request.resource.data.refreshHz is number
+        && request.resource.data.refreshHz > 0 && request.resource.data.refreshHz < 1000
+        && request.resource.data.os in ['ios', 'android', 'other']
+        && (request.resource.data.prediction == null || request.resource.data.prediction in [0, 1, 2])
+        && (request.resource.data.baselineClass == null
+            || request.resource.data.baselineClass in ['day', 'evening', 'late'])
+        && (request.resource.data.k == null || request.resource.data.k in [1, 2, 3])
+        && (request.resource.data.verdict == null || request.resource.data.verdict in ['clear', 'signs', 'none'])
+        && (request.resource.data.lapseDeltaPts == null
+            || (request.resource.data.lapseDeltaPts is number
+                && request.resource.data.lapseDeltaPts >= -100
+                && request.resource.data.lapseDeltaPts <= 100))
+        && (request.resource.data.rtDeltaMs == null
+            || (request.resource.data.rtDeltaMs is number
+                && request.resource.data.rtDeltaMs > -5000
+                && request.resource.data.rtDeltaMs < 5000))
         && (request.resource.data.speedDeltaPct == null
             || (request.resource.data.speedDeltaPct is number
                 && request.resource.data.speedDeltaPct > -100

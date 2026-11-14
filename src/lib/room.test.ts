@@ -1,13 +1,13 @@
 import { expect, test } from 'vitest';
 import type { Summary } from '../storage/upload';
-import { bucketStats, predictionStats, tCrit, toCsv, usable } from './room';
+import { bucketStats, parseRow, predictionStats, tCrit, toCsv, usable } from './room';
 
 function row(over: Partial<Summary> = {}): Summary {
   return {
     v: 1, kind: 'compare', at: '2026-11-15T08:00:00.000Z', bucket: '03-06', first: true, team: false,
     lengthS: 90, overtime: 'none', awakeH: 20, caffeine: false, alcohol: false, justWoke: false,
     hzClass: 'normal', refreshHz: 60, os: 'ios', n: 30, prediction: 0, baselineClass: 'day', k: 1,
-    z: 1.2, verdict: 'none', speedDeltaPct: 5, lapseDeltaPts: 3, meanRtDeltaMs: 20,
+    z: 1.2, verdict: 'none', speedDeltaPct: 5, lapseDeltaPts: 3, rtDeltaMs: 20,
     ...over,
   };
 }
@@ -63,4 +63,23 @@ test('csv has a header and one line per row, nulls empty', () => {
   expect(csv).toHaveLength(3);
   expect(csv[0].split(',')).toHaveLength(24);
   expect(csv[2].split(',')[16]).toBe('');
+});
+
+test('rows read from the server are checked field by field', () => {
+  const { at, ...body } = row();
+  expect(parseRow(body, at)).toEqual(row());
+  expect(parseRow({ ...body, extra: '=HYPERLINK("x")' }, at)).toEqual(row());
+  expect(parseRow({ ...body, os: '=cmd' }, at)).toBeNull();
+  expect(parseRow({ ...body, speedDeltaPct: 1e9 }, at)).toBeNull();
+  expect(parseRow({ ...body, speedDeltaPct: '5' }, at)).toBeNull();
+  expect(parseRow({ ...body, n: 2 }, at)).toBeNull();
+  expect(parseRow({ ...body, first: 'yes' }, at)).toBeNull();
+  expect(parseRow({ ...body, verdict: 'pass' }, at)).toBeNull();
+});
+
+test('csv neutralises text a spreadsheet would run as a formula', () => {
+  const line = toCsv([row({ os: '=1+1' as never, verdict: 'a,"b"' as never })]).trim().split('\n')[1];
+  expect(line).toContain(`"'=1+1"`);
+  expect(line).toContain('"a,""b"""');
+  expect(toCsv([row({ speedDeltaPct: -3.5 })])).toContain(',-3.5,');
 });

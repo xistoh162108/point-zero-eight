@@ -12,6 +12,44 @@ export const usable = (r: Summary) =>
   (r.baselineClass === 'day' || r.baselineClass === 'evening') &&
   r.speedDeltaPct !== null;
 
+const num = (v: unknown, lo: number, hi: number): v is number =>
+  typeof v === 'number' && Number.isFinite(v) && v >= lo && v <= hi;
+const oneOf = (v: unknown, allowed: readonly unknown[]) => allowed.includes(v);
+const orNull = (v: unknown, ok: (x: unknown) => boolean) => v === null || ok(v);
+
+// The collection is world-readable and any anonymous client can add to it, so a row read back
+// is untrusted. Rows that do not have exactly the expected shape are dropped.
+export function parseRow(d: Record<string, unknown>, at: string | null): Summary | null {
+  const ok =
+    d.v === 1 &&
+    oneOf(d.kind, ['baseline', 'compare']) &&
+    oneOf(d.bucket, ['day', 'evening', '21-24', '00-03', '03-06', '06-09', 'other']) &&
+    typeof d.first === 'boolean' &&
+    typeof d.team === 'boolean' &&
+    oneOf(d.lengthS, [90, 180]) &&
+    oneOf(d.overtime, ['none', 'declined', 'taken']) &&
+    num(d.awakeH, 0, 72) &&
+    typeof d.caffeine === 'boolean' &&
+    typeof d.alcohol === 'boolean' &&
+    typeof d.justWoke === 'boolean' &&
+    oneOf(d.hzClass, ['normal', 'low']) &&
+    num(d.refreshHz, 1, 1000) &&
+    oneOf(d.os, ['ios', 'android', 'other']) &&
+    num(d.n, 5, 120) &&
+    orNull(d.prediction, (x) => oneOf(x, [0, 1, 2])) &&
+    orNull(d.baselineClass, (x) => oneOf(x, ['day', 'evening', 'late'])) &&
+    orNull(d.k, (x) => num(x, 1, 3)) &&
+    orNull(d.z, (x) => num(x, -20, 50)) &&
+    orNull(d.verdict, (x) => oneOf(x, ['clear', 'signs', 'none'])) &&
+    orNull(d.speedDeltaPct, (x) => num(x, -100, 100)) &&
+    orNull(d.lapseDeltaPts, (x) => num(x, -100, 100)) &&
+    orNull(d.rtDeltaMs, (x) => num(x, -5000, 5000));
+  if (!ok) return null;
+  const row = {} as Record<string, unknown>;
+  for (const c of CSV_COLUMNS) row[c] = c === 'at' ? at : d[c];
+  return row as unknown as Summary;
+}
+
 export interface BucketStat {
   bucket: string;
   n: number;
@@ -78,11 +116,19 @@ export function predictionStats(rows: Summary[]): PredictionStat[] {
 const CSV_COLUMNS = [
   'v', 'kind', 'at', 'bucket', 'first', 'team', 'lengthS', 'overtime', 'awakeH', 'caffeine', 'alcohol',
   'justWoke', 'hzClass', 'refreshHz', 'os', 'n', 'prediction', 'baselineClass', 'k', 'z', 'verdict',
-  'speedDeltaPct', 'lapseDeltaPts', 'meanRtDeltaMs',
+  'speedDeltaPct', 'lapseDeltaPts', 'rtDeltaMs',
 ] as const;
 
+// Text cells are quoted, and one that a spreadsheet would read as a formula gets a leading quote mark.
+function cell(v: unknown): string {
+  if (v === null || v === undefined) return '';
+  if (typeof v === 'number' || typeof v === 'boolean') return String(v);
+  const s = String(v);
+  const safe = /^[=+\-@\t\r]/.test(s) ? `'${s}` : s;
+  return /[",\n\r']/.test(safe) ? `"${safe.replace(/"/g, '""')}"` : safe;
+}
+
 export function toCsv(rows: Summary[]): string {
-  const cell = (v: unknown) => (v === null || v === undefined ? '' : String(v));
   const lines = rows.map((r) => CSV_COLUMNS.map((c) => cell(r[c])).join(','));
   return [CSV_COLUMNS.join(','), ...lines].join('\n') + '\n';
 }

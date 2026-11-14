@@ -4,11 +4,11 @@ import { useMemo, useState } from "react";
 import { en } from "@/copy/en";
 import { KEYS } from "@/storage/local";
 import { Btn, Mark, Page } from "../ui";
-import { useMounted } from "../useMounted";
+import { useIsClient } from "@/lib/client";
 
 // Team use: hands the per-trial records on this phone to the analyst. They never go to the server.
 export default function ExportPage() {
-  const mounted = useMounted();
+  const mounted = useIsClient();
   const [copied, setCopied] = useState(false);
   const json = useMemo(() => {
     if (!mounted) return null;

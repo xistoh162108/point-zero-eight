@@ -2,14 +2,14 @@ import { en } from '../copy/en';
 import { FT_PER_S_AT_65MPH } from './constants';
 import type { Verdict } from './verdict';
 
-const SAME_MS = 15; // a mean difference under this reads as "about as fast"
+const SAME_MS = 15; // a difference under this reads as "about as fast"
 
-export function distanceLine(meanRtDeltaMs: number): string {
-  if (Math.abs(meanRtDeltaMs) < SAME_MS) return en.result.distanceSame;
-  if (meanRtDeltaMs > 0) {
-    return en.result.distanceSlower(meanRtDeltaMs, (meanRtDeltaMs / 1000) * FT_PER_S_AT_65MPH);
+export function distanceLine(rtDeltaMs: number): string {
+  if (Math.abs(rtDeltaMs) < SAME_MS) return en.result.distanceSame;
+  if (rtDeltaMs > 0) {
+    return en.result.distanceSlower(rtDeltaMs, (rtDeltaMs / 1000) * FT_PER_S_AT_65MPH);
   }
-  return en.result.distanceFaster(meanRtDeltaMs);
+  return en.result.distanceFaster(rtDeltaMs);
 }
 
 // Research citation by hours awake. Always shown with en.result.awakeTag.

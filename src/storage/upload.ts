@@ -29,7 +29,7 @@ export interface SummaryBody {
   verdict: 'clear' | 'signs' | 'none' | null;
   speedDeltaPct: number | null;
   lapseDeltaPts: number | null;
-  meanRtDeltaMs: number | null;
+  rtDeltaMs: number | null;
 }
 
 // As read back from the server. `at` is the server time as an ISO string.
@@ -86,7 +86,7 @@ export function summaryOf(s: Session, all: Session[]): SummaryBody {
     verdict: r ? r.verdict : null,
     speedDeltaPct: r ? round(r.speedDeltaPct, 3) : null,
     lapseDeltaPts: r ? round(r.lapseDeltaPts, 3) : null,
-    meanRtDeltaMs: r ? round(r.meanRtDeltaMs, 1) : null,
+    rtDeltaMs: r ? round(r.rtDeltaMs, 1) : null,
   };
 }
 

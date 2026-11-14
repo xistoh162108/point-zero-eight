@@ -5,6 +5,7 @@ import { useRouter } from "next/navigation";
 import { useEffect, useMemo, useState } from "react";
 import { en } from "@/copy/en";
 import type { Prediction } from "@/engine/types";
+import { baselineOf } from "@/scoring/metrics";
 import {
   baselinesFor,
   compareCooldownMin,
@@ -16,20 +17,20 @@ import {
 } from "@/storage/local";
 import { flush } from "@/storage/upload";
 import { Btn, Mark, Page, linkClass } from "./ui";
-import { useMounted } from "./useMounted";
+import { useIsClient } from "@/lib/client";
 
 interface Ready {
   storage: boolean;
   team: boolean;
   mode: "baseline" | "compare";
   cooldownMin: number;
-  dayMeanMs: number | null;
+  dayTypicalMs: number | null;
   hasResult: boolean;
 }
 
 function load(): Ready {
   if (!storageOk()) {
-    return { storage: false, team: false, mode: "baseline", cooldownMin: 0, dayMeanMs: null, hasResult: false };
+    return { storage: false, team: false, mode: "baseline", cooldownMin: 0, dayTypicalMs: null, hasResult: false };
   }
   const device = getDevice();
   const sessions = getSessions();
@@ -45,7 +46,8 @@ function load(): Ready {
     team: device.team,
     mode,
     cooldownMin: mode === "compare" ? compareCooldownMin(now, sessions) : 0,
-    dayMeanMs: bases.length ? bases.reduce((a, b) => a + b.metrics.meanRtMs, 0) / bases.length : null,
+    // Recomputed from the stored trials, the same way a comparison will use them.
+    dayTypicalMs: bases.length ? baselineOf(bases.map((b) => b.trials), lengthS * 1000).typicalRtMs : null,
     hasResult: sessions.some((s) => s.mode === "compare"),
   };
 }
@@ -55,7 +57,7 @@ const FLAGS = ["caffeine", "alcohol", "justWoke"] as const;
 
 export default function StartPage() {
   const router = useRouter();
-  const mounted = useMounted();
+  const mounted = useIsClient();
   const ready = useMemo(() => (mounted ? load() : null), [mounted]);
   const [awakeH, setAwakeH] = useState<number | null>(null);
   const [prediction, setPrediction] = useState<Prediction | null>(null);
@@ -82,8 +84,8 @@ export default function StartPage() {
       <header className="flex flex-col gap-3">
         <Mark />
         <h1 className="text-4xl font-semibold leading-tight tracking-tight">{en.start.title}</h1>
-        {compare && ready.dayMeanMs !== null && (
-          <p className="font-mono text-accent">{en.start.daytime(ready.dayMeanMs)}</p>
+        {compare && ready.dayTypicalMs !== null && (
+          <p className="font-mono text-accent">{en.start.daytime(ready.dayTypicalMs)}</p>
         )}
         <p className="text-dim">{en.start.subtitle(ready.team ? 180 : 90)}</p>
       </header>

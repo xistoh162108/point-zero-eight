@@ -45,8 +45,8 @@ export interface Result {
   lapseRuleUsed: boolean;
   speedDeltaPct: number; // 100 * (day speed - now speed) / day speed. Positive means slower
   lapseDeltaPts: number; // 100 * (now lapse share - day lapse share)
-  meanRtDeltaMs: number; // now mean - day mean
-  distanceFt: number; // max(0, meanRtDeltaMs) / 1000 * 95.33
+  rtDeltaMs: number; // 1000 / now speed - 1000 / day speed: change in the typical reaction time
+  distanceFt: number; // max(0, rtDeltaMs) / 1000 * 95.33
 }
 
 const signsOrNone = (z: number): Verdict => (z >= F_SIGNS ? 'signs' : 'none');
@@ -94,7 +94,7 @@ export function score(baselines: Trial[][], night: Trial[], team: boolean, overt
     }
   }
 
-  const meanRtDeltaMs = now.meanRtMs - base.meanRtMs;
+  const rtDeltaMs = 1000 / now.speed - 1000 / base.speed;
   return {
     k: base.k,
     z90,
@@ -106,7 +106,7 @@ export function score(baselines: Trial[][], night: Trial[], team: boolean, overt
     lapseRuleUsed: used.lapseRuleUsed,
     speedDeltaPct: (100 * (base.speed - now.speed)) / base.speed,
     lapseDeltaPts: 100 * (now.lapseShare - base.lapseShare),
-    meanRtDeltaMs,
-    distanceFt: (Math.max(0, meanRtDeltaMs) / 1000) * FT_PER_S_AT_65MPH,
+    rtDeltaMs,
+    distanceFt: (Math.max(0, rtDeltaMs) / 1000) * FT_PER_S_AT_65MPH,
   };
 }

@@ -9,7 +9,7 @@ import type { Verdict } from "@/scoring/verdict";
 import { getSessions, storageOk } from "@/storage/local";
 import { baselineClassUsed, flush } from "@/storage/upload";
 import { Mark, Page, linkClass } from "../ui";
-import { useMounted } from "../useMounted";
+import { useIsClient } from "@/lib/client";
 
 interface Loaded {
   session: Session | null;
@@ -33,7 +33,7 @@ const VERDICT_LOOK: Record<Verdict, { icon: string; box: string; tone: string }>
 };
 
 export default function ResultPage() {
-  const mounted = useMounted();
+  const mounted = useIsClient();
   const loaded = useMemo(() => (mounted ? load() : null), [mounted]);
 
   useEffect(() => {
@@ -80,7 +80,7 @@ export default function ResultPage() {
         <p className="text-lg leading-7">{en.result.verdict[r.verdict]}</p>
       </section>
 
-      <p className="text-lg leading-relaxed">{distanceLine(r.meanRtDeltaMs)}</p>
+      <p className="text-lg leading-relaxed">{distanceLine(r.rtDeltaMs)}</p>
 
       {awake && (
         <section className="flex flex-col gap-2 border-l-2 border-line pl-4">
