@@ -1,7 +1,7 @@
 import { expect, test } from 'vitest';
 import type { Session } from '../engine/types';
 import { baselinesFor, compareCooldownMin, decideMode } from '../storage/local';
-import { baselineClassOf, bucketOf } from './time';
+import { baselineClassOf, bucketOf, hoursAwake, wakeIsAhead } from './time';
 
 const at = (h: number, m: number) => new Date(2026, 10, h < 12 ? 15 : 14, h, m);
 
@@ -107,4 +107,20 @@ test('compare cooldown is 30 minutes', () => {
   expect(compareCooldownMin(at(0, 10), s)).toBe(20);
   expect(compareCooldownMin(at(0, 30), s)).toBe(0);
   expect(compareCooldownMin(at(0, 10), [])).toBe(0);
+});
+
+test('hours awake from a wake-up time', () => {
+  const now = new Date(2026, 10, 15, 2, 10); // 02:10
+  expect(hoursAwake('01:40', 'today', now)).toBe(1); // 30 min rounds up
+  expect(hoursAwake('02:10', 'today', now)).toBe(0);
+  expect(hoursAwake('08:00', 'today', now)).toBe(18); // still ahead today: yesterday 08:00
+  expect(hoursAwake('08:00', 'yesterday', now)).toBe(18);
+  expect(hoursAwake('01:00', 'yesterday', now)).toBe(25);
+  expect(wakeIsAhead('08:00', now)).toBe(true);
+  expect(wakeIsAhead('01:00', now)).toBe(false);
+
+  const evening = new Date(2026, 10, 14, 23, 30);
+  expect(hoursAwake('07:30', 'today', evening)).toBe(16);
+  expect(hoursAwake('07:30', 'yesterday', evening)).toBe(40);
+  expect(hoursAwake('', 'today', evening)).toBeNull();
 });

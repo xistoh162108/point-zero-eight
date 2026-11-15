@@ -18,6 +18,7 @@ import {
 import { flush } from "@/storage/upload";
 import { Btn, Mark, Page, linkClass } from "./ui";
 import { useIsClient } from "@/lib/client";
+import { hoursAwake, wakeIsAhead, type WakeDay } from "@/lib/time";
 
 interface Ready {
   storage: boolean;
@@ -52,14 +53,17 @@ function load(): Ready {
   };
 }
 
-const HOURS = Array.from({ length: 48 }, (_, i) => i + 1);
+const DAYS = ["today", "yesterday"] as const;
 const FLAGS = ["caffeine", "alcohol", "justWoke"] as const;
 
 export default function StartPage() {
   const router = useRouter();
   const mounted = useIsClient();
   const ready = useMemo(() => (mounted ? load() : null), [mounted]);
-  const [awakeH, setAwakeH] = useState<number | null>(null);
+  const [wake, setWake] = useState("");
+  const [wakeDay, setWakeDay] = useState<WakeDay>("today");
+  // The clock is read when the time or the day is picked, and again when the test starts.
+  const [pickedAt, setPickedAt] = useState<Date | null>(null);
   const [prediction, setPrediction] = useState<Prediction | null>(null);
   const [flags, setFlags] = useState({ caffeine: false, alcohol: false, justWoke: false });
 
@@ -71,9 +75,13 @@ export default function StartPage() {
 
   const compare = ready.mode === "compare";
   const blocked = !ready.storage || ready.cooldownMin > 0;
-  const canStart = !blocked && awakeH !== null && (!compare || prediction !== null);
+  const ahead = pickedAt !== null && wakeIsAhead(wake, pickedAt);
+  const day: WakeDay = ahead ? "yesterday" : wakeDay;
+  const shownAwakeH = pickedAt === null ? null : hoursAwake(wake, day, pickedAt);
+  const canStart = !blocked && shownAwakeH !== null && (!compare || prediction !== null);
 
   const start = () => {
+    const awakeH = hoursAwake(wake, day, new Date());
     if (!canStart || awakeH === null) return;
     setPending({ awakeH, prediction: compare ? prediction : null, ...flags });
     router.push("/test");
@@ -106,22 +114,44 @@ export default function StartPage() {
 
       {!blocked && (
         <>
-          <label className="flex flex-col gap-2">
-            <span className="font-medium">{en.start.awakeLabel}</span>
-            <select
-              className="min-h-12 rounded-lg border border-line bg-panel px-3 text-base text-ink"
-              value={awakeH ?? ""}
-              onChange={(e) => setAwakeH(e.target.value ? Number(e.target.value) : null)}
-            >
-              <option value="">{en.start.awakePlaceholder}</option>
-              {HOURS.map((h) => (
-                <option key={h} value={h}>
-                  {h}
-                </option>
+          <div className="flex flex-col gap-2">
+            <label htmlFor="wake" className="font-medium">
+              {en.start.wakeLabel}
+            </label>
+            <div className="grid grid-cols-2 gap-2">
+              <input
+                id="wake"
+                type="time"
+                className="col-span-2 min-h-12 min-w-0 rounded-lg border border-line bg-panel px-3 text-base text-ink [color-scheme:dark]"
+                value={wake}
+                onChange={(e) => {
+                  setWake(e.target.value);
+                  setPickedAt(new Date());
+                }}
+              />
+              {DAYS.map((d) => (
+                <button
+                  key={d}
+                  type="button"
+                  aria-pressed={day === d}
+                  disabled={d === "today" && ahead}
+                  onClick={() => {
+                    setWakeDay(d);
+                    setPickedAt(new Date());
+                  }}
+                  className={`min-h-12 rounded-lg border px-3 text-base disabled:opacity-40 ${
+                    day === d ? "border-accent bg-accent text-black" : "border-line bg-panel text-ink"
+                  }`}
+                >
+                  {en.start.wakeDays[d]}
+                </button>
               ))}
-            </select>
-            <span className="text-sm text-dim">{en.start.awakeHint}</span>
-          </label>
+            </div>
+            <span className="text-sm text-dim">
+              {shownAwakeH !== null && <span className="text-ink">{en.start.wakeSummary(shownAwakeH)} </span>}
+              {en.start.wakeHint}
+            </span>
+          </div>
 
           {compare && (
             <fieldset className="flex flex-col gap-2">

@@ -16,9 +16,10 @@ export const en = {
     title: 'Are you as sharp as you think?',
     daytime: (typicalMs: number) => `Daytime you: typical reaction ${secs(typicalMs)}`,
     subtitle: (lengthS: number) => `A ${lengthS}-second reaction test. No install, no login.`,
-    awakeLabel: 'How many hours have you been awake?',
-    awakeHint: "Count from your last real sleep. Naps under an hour don't count.",
-    awakePlaceholder: 'Select hours',
+    wakeLabel: 'What time did you wake up?',
+    wakeHint: "Your last real sleep. Naps under an hour don't count.",
+    wakeDays: { today: 'Today', yesterday: 'Yesterday' },
+    wakeSummary: (h: number) => (h < 1 ? 'Awake less than an hour.' : `Awake about ${h}${NB}${h === 1 ? 'hour' : 'hours'}.`),
     predictionLabel: 'Before we measure: compared with daytime you, right now you are',
     predictionButtons: ['Just as sharp', 'A bit slower', 'Much slower'],
     flags: {
